@@ -1,25 +1,34 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 
-# Passkey Protection
+# পাসওয়ার্ড প্রোটেকশন
 passkey = st.sidebar.text_input("Enter Passkey:", type="password")
 
 if passkey == "dudububu":
-    st.title("🌟 Sajib's Article Blog")
+    st.title("🌟 Sajib's Permanent Blog")
     
-    # Article Input
-    title = st.text_input("Article Title")
-    content = st.text_area("Write your article here...")
-    image_file = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg'])
+    # গুগল শিট কানেকশন
+    conn = st.connection("gsheets", type=GSheetsConnection)
 
-    if st.button("Publish"):
+    # ইনপুট সেকশন
+    with st.form(key="blog_form"):
+        title = st.text_input("Article Title")
+        content = st.text_area("Write your article here...")
+        submit_button = st.form_submit_button(label="Publish")
+
+    if submit_button:
         if title and content:
-            st.markdown("---")
-            st.subheader(title)
-            if image_file:
-                st.image(image_file)
-            st.write(content)
-            st.success("Published Successfully!")
+            # নতুন ডাটা শিটে পাঠানো
+            new_data = {"Title": title, "Content": content}
+            conn.create(data=[new_data])
+            st.success("Successfully Published and Saved!")
         else:
-            st.warning("Please add both title and content.")
+            st.warning("Please fill all fields.")
+
+    # পুরনো পোস্টগুলো দেখানো
+    st.markdown("---")
+    st.subheader("Previous Posts")
+    existing_data = conn.read()
+    st.dataframe(existing_data)
 else:
     st.warning("Please enter the correct passkey (dudububu)")
